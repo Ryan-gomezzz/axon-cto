@@ -1,0 +1,26 @@
+{
+  "name": "@axon/gateway",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@axon/brief": "workspace:*",
+    "@axon/incident": "workspace:*",
+    "@axon/kg": "workspace:*",
+    "@axon/shared": "workspace:*",
+    "@types/express": "latest",
+    "@types/node-cron": "latest",
+    "express": "latest",
+    "node-cron": "latest",
+    "pino": "latest",
+    "zod": "latest"
+  }
+}

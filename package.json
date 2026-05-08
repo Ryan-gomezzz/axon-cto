@@ -1,0 +1,19 @@
+{
+  "name": "@axon/root",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @axon/gateway dev",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "seed": "pnpm --filter @axon/kg seed",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "pino-pretty": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}

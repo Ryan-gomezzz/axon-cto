@@ -1,0 +1,27 @@
+{
+  "name": "@axon/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./env": "./src/env.ts",
+    "./logger": "./src/logger.ts",
+    "./trace": "./src/trace.ts",
+    "./telegram": "./src/telegram.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@types/node-telegram-bot-api": "latest",
+    "dotenv": "latest",
+    "node-telegram-bot-api": "latest",
+    "pino": "latest",
+    "zod": "latest"
+  }
+}

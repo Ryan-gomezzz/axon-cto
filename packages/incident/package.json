@@ -1,0 +1,21 @@
+{
+  "name": "@axon/incident",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@axon/kg": "workspace:*",
+    "@axon/shared": "workspace:*",
+    "@octokit/rest": "latest",
+    "openai": "latest",
+    "pino": "latest",
+    "zod": "latest"
+  }
+}
