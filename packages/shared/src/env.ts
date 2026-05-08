@@ -36,6 +36,11 @@ const EnvSchema = z.object({
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  /**
+   * Optional file path to tee logs to. The demo/fire-webhook.ts script tails
+   * this file to compute incident SLA timing client-side.
+   */
+  LOG_FILE: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

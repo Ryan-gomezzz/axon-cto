@@ -8,10 +8,15 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "run-now": "tsx src/cli/run-now.ts"
   },
   "dependencies": {
+    "@axon/kg": "workspace:*",
+    "@axon/shared": "workspace:*",
     "@octokit/rest": "latest",
-    "openai": "latest"
+    "minimatch": "latest",
+    "openai": "latest",
+    "pino": "latest"
   }
 }

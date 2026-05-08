@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Axon · Stopwatch</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --fg: #f5f1eb;
+        --accent: #c4623d;
+        --dim: #6b6864;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
+        overflow: hidden;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        cursor: pointer;
+        user-select: none;
+        gap: 2.5rem;
+      }
+      .label {
+        font-size: 1rem;
+        letter-spacing: 0.42em;
+        color: var(--dim);
+        text-transform: uppercase;
+      }
+      .label .accent { color: var(--accent); }
+      #display {
+        font-size: clamp(8rem, 22vw, 22rem);
+        font-weight: 200;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      #display.running { color: var(--fg); }
+      #display.stopped { color: var(--accent); }
+      #display.armed { color: var(--dim); }
+      .hint {
+        font-size: 0.85rem;
+        color: var(--dim);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+      .hint kbd {
+        background: rgba(245, 241, 235, 0.06);
+        border: 1px solid rgba(245, 241, 235, 0.12);
+        border-radius: 4px;
+        padding: 0.15rem 0.5rem;
+        font-family: inherit;
+        color: var(--fg);
+      }
+      .ms {
+        opacity: 0.55;
+        font-size: 0.6em;
+        margin-left: 0.1em;
+      }
+      .footer {
+        position: fixed;
+        bottom: 1.2rem;
+        right: 1.6rem;
+        color: var(--dim);
+        font-size: 0.75rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="root">
+      <div class="label">
+        Axon <span class="accent">·</span> Incident SLA
+      </div>
+      <div id="display" class="armed">00:00<span class="ms">.000</span></div>
+      <div class="hint">
+        click anywhere · or press <kbd>space</kbd> · <kbd>r</kbd> to reset
+      </div>
+    </main>
+    <div class="footer">target &lt; 60s</div>
+
+    <script>
+      const display = document.getElementById('display');
+      const root = document.getElementById('root');
+
+      let state = 'armed'; // 'armed' | 'running' | 'stopped'
+      let startTs = 0;
+      let elapsedMs = 0;
+      let raf = null;
+
+      function fmt(ms) {
+        const total = Math.max(0, ms);
+        const m = Math.floor(total / 60000);
+        const s = Math.floor((total % 60000) / 1000);
+        const f = Math.floor(total % 1000);
+        return (
+          String(m).padStart(2, '0') +
+          ':' +
+          String(s).padStart(2, '0') +
+          '<span class="ms">.' +
+          String(f).padStart(3, '0') +
+          '</span>'
+        );
+      }
+
+      function render() {
+        const now = state === 'running' ? performance.now() - startTs : elapsedMs;
+        display.innerHTML = fmt(now);
+        display.className = state;
+        if (state === 'running') raf = requestAnimationFrame(render);
+      }
+
+      function start() {
+        state = 'running';
+        startTs = performance.now();
+        render();
+      }
+
+      function stop() {
+        if (state !== 'running') return;
+        elapsedMs = performance.now() - startTs;
+        state = 'stopped';
+        if (raf) cancelAnimationFrame(raf);
+        render();
+      }
+
+      function reset() {
+        state = 'armed';
+        elapsedMs = 0;
+        if (raf) cancelAnimationFrame(raf);
+        render();
+      }
+
+      function toggle() {
+        if (state === 'running') return stop();
+        if (state === 'stopped') return reset();
+        return start();
+      }
+
+      root.addEventListener('click', toggle);
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          toggle();
+        } else if (e.key === 'r' || e.key === 'R') {
+          reset();
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>

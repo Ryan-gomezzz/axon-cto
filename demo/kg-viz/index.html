@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Axon · Knowledge Graph</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --fg: #f5f1eb;
+        --accent: #c4623d;
+        --dim: #6b6864;
+        --c-engineer: #84a98c;
+        --c-pr: #cad2c5;
+        --c-incident: #c4623d;
+        --c-service: #d4a017;
+        --c-sprint: #a07ec1;
+        --c-decision: #5e8aa6;
+        --c-deploy: #b3826d;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
+        overflow: hidden;
+      }
+      header {
+        position: fixed;
+        top: 1.2rem;
+        left: 1.6rem;
+        font-size: 0.9rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--dim);
+        z-index: 10;
+      }
+      header .accent { color: var(--accent); }
+      header .meta {
+        font-size: 0.7rem;
+        letter-spacing: 0.15em;
+        margin-top: 0.4rem;
+        color: var(--dim);
+      }
+      .legend {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.6rem;
+        z-index: 10;
+        font-size: 0.7rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--dim);
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 0.4rem 1rem;
+      }
+      .legend .swatch {
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+      }
+      .footer {
+        position: fixed;
+        bottom: 1.2rem;
+        right: 1.6rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .footer .accent { color: var(--accent); }
+      .error {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--accent);
+        text-align: center;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        max-width: 36rem;
+      }
+      svg { display: block; width: 100vw; height: 100vh; }
+      .link {
+        stroke: rgba(245, 241, 235, 0.18);
+        stroke-width: 1;
+      }
+      .link.highlight { stroke: var(--accent); stroke-width: 2; }
+      .edge-label {
+        fill: var(--dim);
+        font-size: 9px;
+        font-family: inherit;
+        text-anchor: middle;
+        pointer-events: none;
+        opacity: 0.6;
+      }
+      .node circle {
+        stroke: rgba(10,10,10,0.95);
+        stroke-width: 1.5;
+        cursor: pointer;
+      }
+      .node text {
+        fill: var(--fg);
+        font-size: 10px;
+        font-family: inherit;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>Axon <span class="accent">·</span> Knowledge Graph</div>
+      <div class="meta" id="meta">loading…</div>
+    </header>
+    <div class="legend" id="legend"></div>
+    <svg id="viz"></svg>
+    <div class="footer">the moat <span class="accent">·</span> typed</div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+      const TYPES = ['Engineer', 'PR', 'Incident', 'Service', 'Sprint', 'Decision', 'Deploy'];
+      const COLOURS = {
+        Engineer: getComputedStyle(document.documentElement).getPropertyValue('--c-engineer').trim(),
+        PR: getComputedStyle(document.documentElement).getPropertyValue('--c-pr').trim(),
+        Incident: getComputedStyle(document.documentElement).getPropertyValue('--c-incident').trim(),
+        Service: getComputedStyle(document.documentElement).getPropertyValue('--c-service').trim(),
+        Sprint: getComputedStyle(document.documentElement).getPropertyValue('--c-sprint').trim(),
+        Decision: getComputedStyle(document.documentElement).getPropertyValue('--c-decision').trim(),
+        Deploy: getComputedStyle(document.documentElement).getPropertyValue('--c-deploy').trim(),
+      };
+      const RADIUS = {
+        Engineer: 7, PR: 5, Incident: 9, Service: 12, Sprint: 8, Decision: 7, Deploy: 6,
+      };
+
+      const legend = document.getElementById('legend');
+      for (const t of TYPES) {
+        const swatch = document.createElement('span');
+        swatch.className = 'swatch';
+        swatch.style.background = COLOURS[t];
+        const label = document.createElement('span');
+        label.textContent = t;
+        legend.appendChild(swatch);
+        legend.appendChild(label);
+      }
+
+      const URL = new URLSearchParams(window.location.search).get('src')
+        ?? 'http://localhost:3030/demo/kg-snapshot';
+
+      async function load() {
+        const meta = document.getElementById('meta');
+        try {
+          const res = await fetch(URL);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          meta.textContent = `${data.nodes.length} nodes · ${data.edges.length} edges`;
+          render(data);
+        } catch (err) {
+          meta.textContent = 'load failed';
+          const e = document.createElement('div');
+          e.className = 'error';
+          e.innerHTML = 'kg-snapshot fetch failed.<br/>'
+            + 'is the gateway running on the URL above?<br/><br/>'
+            + '<small style="color:var(--dim)">' + err.message + '</small>';
+          document.body.appendChild(e);
+        }
+      }
+
+      function render({ nodes, edges }) {
+        const svg = d3.select('#viz');
+        const w = window.innerWidth, h = window.innerHeight;
+
+        const links = edges.map(e => ({ source: e.source, target: e.target, type: e.type }));
+
+        const sim = d3.forceSimulation(nodes)
+          .force('link', d3.forceLink(links).id(d => d.id).distance(70).strength(0.5))
+          .force('charge', d3.forceManyBody().strength(-180))
+          .force('center', d3.forceCenter(w / 2, h / 2))
+          .force('collide', d3.forceCollide(d => (RADIUS[d.type] ?? 6) + 4))
+          .alpha(0.9)
+          .alphaDecay(0.02);
+
+        const linkSel = svg.append('g')
+          .selectAll('line')
+          .data(links)
+          .join('line')
+          .attr('class', 'link');
+
+        const labelSel = svg.append('g')
+          .selectAll('text')
+          .data(links)
+          .join('text')
+          .attr('class', 'edge-label')
+          .text(d => d.type);
+
+        const nodeSel = svg.append('g')
+          .selectAll('g')
+          .data(nodes)
+          .join('g')
+          .attr('class', 'node')
+          .call(drag(sim));
+
+        nodeSel.append('circle')
+          .attr('r', d => RADIUS[d.type] ?? 6)
+          .attr('fill', d => COLOURS[d.type] ?? '#888');
+
+        nodeSel.append('text')
+          .attr('x', d => (RADIUS[d.type] ?? 6) + 4)
+          .attr('y', 4)
+          .text(d => d.label);
+
+        sim.on('tick', () => {
+          linkSel
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
+          labelSel
+            .attr('x', d => (d.source.x + d.target.x) / 2)
+            .attr('y', d => (d.source.y + d.target.y) / 2);
+          nodeSel.attr('transform', d => `translate(${d.x},${d.y})`);
+        });
+
+        window.addEventListener('resize', () => {
+          sim.force('center', d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2));
+          sim.alpha(0.4).restart();
+        });
+      }
+
+      function drag(sim) {
+        return d3.drag()
+          .on('start', (event, d) => {
+            if (!event.active) sim.alphaTarget(0.3).restart();
+            d.fx = d.x; d.fy = d.y;
+          })
+          .on('drag', (event, d) => {
+            d.fx = event.x; d.fy = event.y;
+          })
+          .on('end', (event, d) => {
+            if (!event.active) sim.alphaTarget(0);
+            d.fx = null; d.fy = null;
+          });
+      }
+
+      load();
+    </script>
+  </body>
+</html>

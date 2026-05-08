@@ -15,5 +15,11 @@
     "tsx": "latest",
     "typescript": "latest",
     "vitest": "latest"
+  },
+  "dependencies": {
+    "@axon/incident": "workspace:*",
+    "@axon/kg": "workspace:*",
+    "@axon/shared": "workspace:*",
+    "dotenv": "latest"
   }
 }

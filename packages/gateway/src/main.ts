@@ -7,6 +7,8 @@ import {
   registerIncidentHandlers,
   type IncidentJobContext,
 } from '@axon/incident';
+import { registerPRHealth, type PRContext } from '@axon/pr';
+import { registerSprintRisk, type SprintContext } from '@axon/sprint';
 import { JobQueue } from './queue.js';
 import { Scheduler } from './scheduler.js';
 import { createApp, type ServerContext } from './server.js';
@@ -29,14 +31,7 @@ const scheduler = new Scheduler({
 });
 
 // 'incident' is registered by registerIncidentHandlers below.
-queue.registerHandler('pr-realtime', async (_payload, traceId) => {
-  // TODO(phase-5): wire @axon/pr.handleGitHubPRWebhook here.
-  log.info(
-    { component: 'queue', jobType: 'pr-realtime', traceId },
-    'pr-realtime job received (handler not yet wired)',
-  );
-});
-
+// 'pr-realtime' is registered by registerPRHealth below.
 queue.registerHandler('github-event', async (_payload, traceId) => {
   // TODO(phase-5): broaden when we add non-PR GitHub event handling.
   log.info(
@@ -120,6 +115,33 @@ const incidentCtx: IncidentJobContext = {
   },
 };
 const { recovery } = registerIncidentHandlers({ ...incidentCtx, queue });
+
+const prCtx: PRContext = {
+  kg,
+  telegram,
+  log: log.child({ component: 'pr' }),
+  env: {
+    GITHUB_TOKEN: env.GITHUB_TOKEN,
+    GITHUB_ORG: env.GITHUB_ORG,
+    GITHUB_REPO: env.GITHUB_REPO,
+    LLM_API_KEY: env.LLM_API_KEY,
+    LLM_BASE_URL: env.LLM_BASE_URL,
+    LLM_MODEL_ROUTINE: env.LLM_MODEL_ROUTINE,
+  },
+};
+registerPRHealth({ ...prCtx, queue, scheduler });
+
+const sprintCtx: SprintContext = {
+  kg,
+  telegram,
+  log: log.child({ component: 'sprint' }),
+  env: {
+    LLM_API_KEY: env.LLM_API_KEY,
+    LLM_BASE_URL: env.LLM_BASE_URL,
+    LLM_MODEL_ROUTINE: env.LLM_MODEL_ROUTINE,
+  },
+};
+registerSprintRisk({ ...sprintCtx, scheduler });
 
 const app = createApp(ctx);
 

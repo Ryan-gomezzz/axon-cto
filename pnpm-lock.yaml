@@ -7,6 +7,19 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@axon/incident':
+        specifier: workspace:*
+        version: link:packages/incident
+      '@axon/kg':
+        specifier: workspace:*
+        version: link:packages/kg
+      '@axon/shared':
+        specifier: workspace:*
+        version: link:packages/shared
+      dotenv:
+        specifier: latest
+        version: 17.4.2
     devDependencies:
       '@types/node':
         specifier: latest
@@ -53,9 +66,15 @@ importers:
       '@axon/kg':
         specifier: workspace:*
         version: link:../kg
+      '@axon/pr':
+        specifier: workspace:*
+        version: link:../pr
       '@axon/shared':
         specifier: workspace:*
         version: link:../shared
+      '@axon/sprint':
+        specifier: workspace:*
+        version: link:../sprint
       '@types/express':
         specifier: latest
         version: 5.0.6
@@ -110,12 +129,24 @@ importers:
 
   packages/pr:
     dependencies:
+      '@axon/kg':
+        specifier: workspace:*
+        version: link:../kg
+      '@axon/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@octokit/rest':
         specifier: latest
         version: 22.0.1
+      minimatch:
+        specifier: latest
+        version: 10.2.5
       openai:
         specifier: latest
         version: 6.37.0(zod@4.4.3)
+      pino:
+        specifier: latest
+        version: 10.3.1
 
   packages/shared:
     dependencies:
@@ -137,12 +168,18 @@ importers:
 
   packages/sprint:
     dependencies:
-      '@octokit/rest':
-        specifier: latest
-        version: 22.0.1
+      '@axon/kg':
+        specifier: workspace:*
+        version: link:../kg
+      '@axon/shared':
+        specifier: workspace:*
+        version: link:../shared
       openai:
         specifier: latest
         version: 6.37.0(zod@4.4.3)
+      pino:
+        specifier: latest
+        version: 10.3.1
 
 packages:
 
@@ -991,6 +1028,11 @@ packages:
     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
     dev: false
 
+  /balanced-match@4.0.4:
+    resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
+    engines: {node: 18 || 20 || >=22}
+    dev: false
+
   /base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
     dev: false
@@ -1054,6 +1096,13 @@ packages:
       type-is: 2.0.1
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /brace-expansion@5.0.6:
+    resolution: {integrity: sha512-kLpxurY4Z4r9sgMsyG0Z9uzsBlgiU/EFKhj/h91/8yHu0edo7XuixOIH3VcJ8kkxs6/jPzoI6U9Vj3WqbMQ94g==}
+    engines: {node: 18 || 20 || >=22}
+    dependencies:
+      balanced-match: 4.0.4
     dev: false
 
   /buffer@5.7.1:
@@ -2229,6 +2278,13 @@ packages:
   /mimic-response@3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
+    dev: false
+
+  /minimatch@10.2.5:
+    resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
+    engines: {node: 18 || 20 || >=22}
+    dependencies:
+      brace-expansion: 5.0.6
     dev: false
 
   /minimist@1.2.8:
